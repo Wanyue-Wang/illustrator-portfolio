@@ -16,7 +16,7 @@ async function platformFonts(page, selector) {
   }
 }
 
-test('requested branding, equal navigation, left categories and blue artwork overlays', async ({ page }) => {
+test('requested branding, equal navigation, top categories and blue artwork overlays', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
   await expect(page.locator('.wordmark')).toHaveAccessibleName('Wanyue Wang');
@@ -25,20 +25,23 @@ test('requested branding, equal navigation, left categories and blue artwork ove
   await expect(page.locator('.signature-image')).toHaveCSS('filter', 'none');
   const fonts = await platformFonts(page, '.nav-link');
   expect(fonts.some(font => font.familyName === 'Trattatello' && font.isCustomFont)).toBe(true);
-  await expect(page.locator('.navigation a')).toHaveText(['Work', 'About', 'Contact']);
+  await expect(page.locator('.navigation a')).toHaveText(['all works', 'artistic', 'commercial', 'about', 'contact']);
   await expect(page.locator('.header-description')).toHaveCount(0);
   await expect(page.locator('.language-select option')).toHaveText(['English', '中文']);
   await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en');
-  await expect(page.locator('.work-filters button')).toHaveText(['all works', 'artistic', 'commercial']);
+  await expect(page.locator('.work-filters, .work-layout')).toHaveCount(0);
   await expect(page.locator('.work-item')).toHaveCount(6);
   await expect(page.locator('.hero, .work-caption, .gallery-note, .work-end, .wordmark-dot')).toHaveCount(0);
   await expect(page.locator('.site-header svg')).toHaveCount(0);
   const styles = await page.locator('.navigation a').evaluateAll(links => links.map(link => ({ size: getComputedStyle(link).fontSize, weight: getComputedStyle(link).fontWeight })));
   expect(new Set(styles.map(style => style.size)).size).toBe(1);
   expect(styles.every(style => Number(style.weight) >= 600)).toBe(true);
-  const filters = await page.locator('.work-filters').boundingBox();
+  const brand = await page.locator('.wordmark').boundingBox();
   const image = await page.locator('.work-image').first().boundingBox();
-  expect(filters.x + filters.width).toBeLessThan(image.x);
+  expect(Math.abs(image.x - brand.x)).toBeLessThan(1);
+  const language = await page.locator('.language-select').boundingBox();
+  const lastLink = await page.locator('.navigation a').last().boundingBox();
+  expect(language.x).toBeGreaterThan(lastLink.x + lastLink.width);
   expect(image.y).toBeLessThan(300);
   const first = page.locator('.work-link').first();
   await expect(first.locator('.work-overlay')).toHaveCSS('opacity', '0');
@@ -61,13 +64,16 @@ test('artworks load, both categories filter correctly, and project navigation wo
     await expect.poll(() => image.evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
   }
   for (const category of ['artistic', 'commercial']) {
-    const button = page.getByRole('button', { name: category, exact: true });
+    const button = page.getByRole('link', { name: category, exact: true });
     await button.click();
     await expect(page.locator('.work-item')).toHaveCount(3);
-    await expect(button).toHaveAttribute('aria-pressed', 'true');
+    await expect(button).toHaveAttribute('aria-current', 'page');
+    await expect(page).toHaveURL(`/?category=${category}`);
+    await page.reload();
+    await expect(page.locator('.work-item')).toHaveCount(3);
     await expect(page.locator('.work-category')).toHaveText([category, category, category]);
   }
-  await page.getByRole('button', { name: 'all works', exact: true }).click();
+  await page.getByRole('link', { name: 'all works', exact: true }).click();
   await expect(page.locator('.work-item')).toHaveCount(6);
   await page.getByRole('link', { name: 'View Slow afternoons' }).click();
   await expect(page).toHaveURL('/work/slow-afternoons');
@@ -85,11 +91,11 @@ test('Chinese and English translate projects, About and contact and persist on r
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await page.getByRole('combobox', { name: 'Language' }).selectOption('zh');
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
-  await expect(page.locator('.navigation a')).toHaveText(['作品', '关于', '联系']);
+  await expect(page.locator('.navigation a')).toHaveText(['全部作品', '艺术创作', '商业合作', '关于', '联系']);
   const fonts = await platformFonts(page, '.nav-link');
   expect(fonts.some(font => ['JinNanJunJunTi', '荆南俊俊体'].includes(font.familyName) && font.isCustomFont)).toBe(true);
-  await expect(page.locator('.work-filters button')).toHaveText(['全部作品', '艺术创作', '商业合作']);
-  await page.getByRole('button', { name: '商业合作', exact: true }).click();
+  await expect(page.locator('.work-filters')).toHaveCount(0);
+  await page.getByRole('link', { name: '商业合作', exact: true }).click();
   await expect(page.locator('.work-item')).toHaveCount(3);
   await page.getByRole('link', { name: '查看 一隅栖所' }).click();
   await expect(page.locator('h1')).toHaveText('一隅栖所');
@@ -101,9 +107,13 @@ test('Chinese and English translate projects, About and contact and persist on r
   await page.getByRole('link', { name: '关于', exact: true }).click();
   await expect(page.getByRole('heading', { name: '你好，我是 Wanyue。' })).toBeVisible();
   await expect(page.locator('.contact-list dt')).toHaveText(['微信', '邮箱', 'Instagram']);
+  await page.getByRole('link', { name: '艺术创作', exact: true }).click();
+  await expect(page).toHaveURL('/?category=artistic');
+  await expect(page.locator('.work-item')).toHaveCount(3);
+  await page.getByRole('link', { name: '关于', exact: true }).click();
   await page.getByRole('combobox', { name: '语言' }).selectOption('en');
   await expect(page.getByRole('heading', { name: 'Hello, I’m Wanyue.' })).toBeVisible();
-  await expect(page.locator('.navigation a')).toHaveText(['Work', 'About', 'Contact']);
+  await expect(page.locator('.navigation a')).toHaveText(['all works', 'artistic', 'commercial', 'about', 'contact']);
   await page.reload();
   await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en');
 });
@@ -114,7 +124,7 @@ test('six detail routes, 404 and plain contact information work', async ({ page 
     await expect(page.locator('.project-cover img')).toBeVisible();
     await expect.poll(() => page.locator('.project-cover img').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
   }
-  await page.getByRole('link', { name: 'Contact', exact: true }).click();
+  await page.getByRole('link', { name: 'contact', exact: true }).click();
   await expect(page).toHaveURL('/#contact');
   await expect(page.locator('.email-link')).toBeInViewport();
   await expect(page.locator('#contact h2')).toHaveText('contact');

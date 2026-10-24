@@ -1,12 +1,19 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, HashRouter, Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { artist, projects, assetUrl } from './data';
 import { LanguageProvider, useLanguage } from './i18n';
 import './styles.css';
 
+function workCategory(search) {
+  const category = new URLSearchParams(search).get('category');
+  return ['artistic', 'commercial'].includes(category) ? category : 'all';
+}
+
 function Header() {
   const { language, setLanguage, t } = useLanguage();
+  const location = useLocation();
+  const category = workCategory(location.search);
   return (
     <header className="site-header">
       <div className="branding">
@@ -16,9 +23,18 @@ function Header() {
       </div>
       <div className="header-controls">
         <nav className="navigation" aria-label={t.mainNavigation}>
-          <NavLink to="/" end className="nav-link">{t.work}</NavLink>
-          <NavLink to="/about" className="nav-link">{t.about}</NavLink>
-          <Link to="/#contact" className="nav-link">{t.contact}</Link>
+          {['all', 'artistic', 'commercial'].map(item => (
+            <Link
+              key={item}
+              to={item === 'all' ? '/' : `/?category=${item}`}
+              className="nav-link"
+              aria-current={location.pathname === '/' && category === item && location.hash !== '#contact' ? 'page' : undefined}
+            >
+              {t.categories[item]}
+            </Link>
+          ))}
+          <NavLink to="/about" className="nav-link">{t.about.toLowerCase()}</NavLink>
+          <Link to="/#contact" className="nav-link">{t.contact.toLowerCase()}</Link>
         </nav>
         <select className="language-select" aria-label={t.languageSelect} value={language} onChange={event => setLanguage(event.target.value)}>
           <option value="en">English</option>
@@ -64,23 +80,14 @@ function WorkCard({ project, index }) {
 }
 
 function Home() {
-  const [category, setCategory] = useState('all');
+  const category = workCategory(useLocation().search);
   const { t } = useLanguage();
   const selected = projects.filter(project => category === 'all' || project.category === category);
   return (
     <section className="selected-work" id="selected-work" aria-labelledby="work-heading">
-      <h1 id="work-heading" className="sr-only">{t.work}</h1>
-      <div className="work-layout">
-        <nav className="work-filters" aria-label={t.workCategories}>
-          {['all', 'artistic', 'commercial'].map(item => (
-            <button type="button" key={item} onClick={() => setCategory(item)} className={`filter${category === item ? ' active' : ''}`} aria-pressed={category === item}>
-              {t.categories[item]}
-            </button>
-          ))}
-        </nav>
-        <div className={`gallery${category !== 'all' ? ' gallery-filtered' : ''}`} key={category} aria-live="polite">
-          {selected.map((project, index) => <WorkCard project={project} index={index} key={project.slug} />)}
-        </div>
+      <h1 id="work-heading" className="sr-only">{t.categories[category]}</h1>
+      <div className={`gallery${category !== 'all' ? ' gallery-filtered' : ''}`} key={category} aria-live="polite">
+        {selected.map((project, index) => <WorkCard project={project} index={index} key={project.slug} />)}
       </div>
     </section>
   );
