@@ -51,7 +51,7 @@ const html = `<!doctype html>
   <meta name="theme-color" content="#f8f6f0">
   <meta name="description" content="An independent illustrator’s colourful portfolio. Self-contained, offline preview.">
   <link rel="icon" href="data:image/svg+xml;base64,${icon}">
-  <title>Alma Ríos — Illustration & little wonders</title>
+  <title>Illustrator portfolio — Wanyue Wang</title>
   <style>${css}</style>
 </head>
 <body>
