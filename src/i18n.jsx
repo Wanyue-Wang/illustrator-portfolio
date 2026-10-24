@@ -4,7 +4,6 @@ const translations = {
   en: {
     work: 'Work', about: 'About', contact: 'Contact', contactHeading: 'contact',
     mainNavigation: 'Main navigation', languageSelect: 'Language',
-    identityLine1: 'Independent illustrator', identityLine2: '& visual storyteller',
     categories: { all: 'all works', artistic: 'artistic', commercial: 'commercial' },
     workCategories: 'Work categories', viewProject: 'View', allWork: 'All works',
     skip: 'Skip to content', wechat: 'WeChat', email: 'Email', instagram: 'Instagram',
@@ -33,7 +32,6 @@ const translations = {
   zh: {
     work: '作品', about: '关于', contact: '联系', contactHeading: '联系',
     mainNavigation: '主导航', languageSelect: '语言',
-    identityLine1: '独立插画师', identityLine2: '与视觉叙事创作者',
     categories: { all: '全部作品', artistic: '艺术创作', commercial: '商业合作' },
     workCategories: '作品分类', viewProject: '查看', allWork: '全部作品',
     skip: '跳至正文', wechat: '微信', email: '邮箱', instagram: 'Instagram',

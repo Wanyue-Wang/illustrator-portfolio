@@ -2,7 +2,7 @@
 
 线上网站：https://wanyue-wang.github.io/illustrator-portfolio/
 
-React + Vite 响应式作品集，使用本地 DM Sans 无衬线字体与中文无衬线回退字体、非对称作品画廊、中英文切换、作品分类、独立项目详情页、About 与纯文字 Contact。首次访问默认英文，语言选择保存在当前浏览器。
+React + Vite 响应式作品集，英文使用上传的 Trattatello，中文使用上传的荆南俊俊体，包含原始蓝色签名、非对称作品画廊、中英文切换、作品分类、独立项目详情页、About 与 Contact。首次访问默认英文，语言选择保存在当前浏览器。
 
 ## 本地运行
 
@@ -18,10 +18,12 @@ npm run dev
 ## 内容与样式
 
 - `src/data.js`：`artist` 保存姓名、微信、邮箱及 Instagram；`projects` 保存图片、尺寸、英文文案与分类，`chineseProjects` 保存对应中文文案。
+- `public/brand/wanyue-wang-signature.png`：上传的原始签名 PNG，保留像素、颜色及透明度。页首通过 CSS 视口隐藏四周透明留白，图片本身不裁切或变色；点击签名可返回作品页，原姓名后的小字已移除。
+- `src/assets/Trattatello.ttf`：上传的英文原字体文件。`src/assets/JingNanJunJunTi-Bold.ttf`：上传的中文原字体文件。两者通过 `@font-face` 和 Unicode 范围应用到全部页面文字、导航、按钮与语言选择；中文字体覆盖目前页面使用的全部汉字。签名保持为 PNG，不受网页字体影响。
 - 分类使用稳定的 `artistic`、`commercial` 标识；全部作品筛选为 `all`，显示文字在语言文件中。示例作品中，原 Personal 归入 artistic，原 Editorial / Collaborations 归入 commercial。
 - `src/i18n.jsx`：导航、分类名称、About、联系区、详情标签及页面元信息的中英文文案。语言状态保存在 `wanyue-portfolio-language` 本地存储键中，不按浏览器语言自动切换。
 - `public/art/`：替换个人插画，使用 `/art/文件名` 引用；部署构建会自动加上仓库路径。画廊保留图片原始比例。
-- `src/styles.css`：背景、字体、间距、画廊编排及 `--hover: #ff9cf8` 粉色信息条。六个默认作品各有位置规则，新增作品可扩展 `.work-item-N`。
+- `src/styles.css`：页面底色 `#fcf1d6`、Contact 全宽底色 `#f39fff`、悬停信息条 `--hover: #3397ff`，以及字体、间距与画廊编排。六个默认作品各有位置规则，新增作品可扩展 `.work-item-N`。
 - 图片信息在悬停或键盘聚焦时显示，触屏设备常驻显示；图片下方不另设标题或类别。
 - 多图项目可加入 `gallery` 数组，例如 `[{ src: '/art/page-01.png', alt: '图片描述', caption: '第一话', size: 'wide', align: 'center' }]`。支持 `wide / medium / small` 宽度及 `left / center / right` 对齐；可选 `translations.zh` 提供中文图片描述与图注。
 
@@ -37,7 +39,7 @@ npm run dev
 npm test
 ```
 
-6 组 Playwright 浏览器测试覆盖品牌与同级导航、左侧分类、粉色悬停信息、图片与筛选、项目路由及刷新、中英文切换与记忆、纯文字联系信息、404、触屏访问，以及两种语言在 360 / 390 / 768 / 1024 / 1440 宽度下的字体与溢出。
+6 组 Playwright 浏览器测试覆盖品牌与同级导航、左侧分类、蓝色悬停信息、图片与筛选、项目路由及刷新、中英文切换与记忆、纯文字联系信息、404、触屏访问，以及两种语言在 360 / 390 / 768 / 1024 / 1440 宽度下的字体与溢出。
 
 此环境使用 `/usr/bin/chromium`；其他机器先运行 `npx playwright install chromium`。
 

@@ -21,16 +21,16 @@ const result = await build({
     'import.meta.env.BASE_URL': '"/"',
     'import.meta.env.VITE_ROUTER_MODE': '"hash"',
   },
-  loader: { '.woff': 'dataurl', '.woff2': 'dataurl' },
+  loader: { '.woff': 'dataurl', '.woff2': 'dataurl', '.ttf': 'dataurl' },
   plugins: [{
     name: 'self-contained-preview',
     setup(builder) {
       builder.onLoad({ filter: /\/src\/(main\.jsx|data\.js)$/ }, async ({ path: sourcePath }) => {
         let contents = (await readFile(sourcePath, 'utf8')).replace(/^\s*\/\/.*$/gm, '');
         if (sourcePath.endsWith('data.js')) {
-          const files = [...contents.matchAll(/'\/art\/([^']+\.png)'/g)];
+          const files = [...contents.matchAll(/'\/((?:art|brand)\/[^']+\.png)'/g)];
           for (const match of files) {
-            const bytes = await readFile(path.join(root, 'public/art', match[1]));
+            const bytes = await readFile(path.join(root, 'public', match[1]));
             contents = contents.replace(match[0], JSON.stringify(`data:image/png;base64,${bytes.toString('base64')}`));
           }
         }
@@ -48,7 +48,7 @@ const html = `<!doctype html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f8f6f0">
+  <meta name="theme-color" content="#fcf1d6">
   <meta name="description" content="An independent illustrator’s colourful portfolio. Self-contained, offline preview.">
   <link rel="icon" href="data:image/svg+xml;base64,${icon}">
   <title>Illustrator portfolio — Wanyue Wang</title>

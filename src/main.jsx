@@ -1,10 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, HashRouter, Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
-import '@fontsource/dm-sans/latin-400.css';
-import '@fontsource/dm-sans/latin-500.css';
-import '@fontsource/dm-sans/latin-600.css';
-import '@fontsource/dm-sans/latin-700.css';
 import { artist, projects, assetUrl } from './data';
 import { LanguageProvider, useLanguage } from './i18n';
 import './styles.css';
@@ -14,8 +10,9 @@ function Header() {
   return (
     <header className="site-header">
       <div className="branding">
-        <Link to="/" className="wordmark">{artist.name}</Link>
-        <p className="header-description">{t.identityLine1}<br />{t.identityLine2}</p>
+        <Link to="/" className="wordmark" aria-label={artist.name}>
+          <img className="signature-image" src={artist.signature} alt={artist.name} width="2388" height="1668" fetchPriority="high" />
+        </Link>
       </div>
       <div className="header-controls">
         <nav className="navigation" aria-label={t.mainNavigation}>
@@ -192,12 +189,14 @@ function Contact() {
   const { t } = useLanguage();
   return (
     <footer className="site-footer" id="contact" aria-labelledby="contact-heading">
-      <h2 id="contact-heading">{t.contactHeading}</h2>
-      <dl className="contact-list">
-        <div><dt>{t.wechat}</dt><dd>{artist.wechat}</dd></div>
-        <div><dt>{t.email}</dt><dd><a className="email-link" href={`mailto:${artist.email}`}>{artist.email}</a></dd></div>
-        <div><dt>{t.instagram}</dt><dd><a className="instagram-link" href={artist.instagram} target="_blank" rel="noreferrer">@{artist.instagramHandle}</a></dd></div>
-      </dl>
+      <div className="contact-inner">
+        <h2 id="contact-heading">{t.contactHeading}</h2>
+        <dl className="contact-list">
+          <div><dt>{t.wechat}</dt><dd>{artist.wechat}</dd></div>
+          <div><dt>{t.email}</dt><dd><a className="email-link" href={`mailto:${artist.email}`}>{artist.email}</a></dd></div>
+          <div><dt>{t.instagram}</dt><dd><a className="instagram-link" href={artist.instagram} target="_blank" rel="noreferrer">@{artist.instagramHandle}</a></dd></div>
+        </dl>
+      </div>
     </footer>
   );
 }

@@ -7,6 +7,7 @@ export const assetUrl = path => path.startsWith('/') ? `${import.meta.env.BASE_U
 
 export const artist = {
   name: 'Wanyue Wang',
+  signature: assetUrl('/brand/wanyue-wang-signature.png'),
   wechat: 'w2013729-',
   email: 'wwwwanyuew@gmail.com',
   instagram: 'https://www.instagram.com/wwwwanyue/',

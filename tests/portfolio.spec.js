@@ -2,12 +2,31 @@ import { test, expect } from '@playwright/test';
 
 const slugs = ['slow-afternoons', 'a-place-to-be', 'in-full-bloom', 'moonlit-garden', 'the-shape-of-home', 'together-we-grow'];
 
-test('requested branding, equal navigation, left categories and pink artwork overlays', async ({ page }) => {
+async function platformFonts(page, selector) {
+  await page.evaluate(() => document.fonts.ready);
+  const client = await page.context().newCDPSession(page);
+  try {
+    await client.send('DOM.enable');
+    await client.send('CSS.enable');
+    const { root } = await client.send('DOM.getDocument');
+    const { nodeId } = await client.send('DOM.querySelector', { nodeId: root.nodeId, selector });
+    return (await client.send('CSS.getPlatformFontsForNode', { nodeId })).fonts;
+  } finally {
+    await client.detach();
+  }
+}
+
+test('requested branding, equal navigation, left categories and blue artwork overlays', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
-  await expect(page.locator('.wordmark')).toHaveText('Wanyue Wang');
+  await expect(page.locator('.wordmark')).toHaveAccessibleName('Wanyue Wang');
+  await expect(page.locator('.signature-image')).toHaveAttribute('alt', 'Wanyue Wang');
+  await expect.poll(() => page.locator('.signature-image').evaluate(img => img.complete && img.naturalWidth === 2388)).toBe(true);
+  await expect(page.locator('.signature-image')).toHaveCSS('filter', 'none');
+  const fonts = await platformFonts(page, '.nav-link');
+  expect(fonts.some(font => font.familyName === 'Trattatello' && font.isCustomFont)).toBe(true);
   await expect(page.locator('.navigation a')).toHaveText(['Work', 'About', 'Contact']);
-  await expect(page.locator('.header-description')).toContainText('Independent illustrator');
+  await expect(page.locator('.header-description')).toHaveCount(0);
   await expect(page.locator('.language-select option')).toHaveText(['English', '中文']);
   await expect(page.getByRole('combobox', { name: 'Language' })).toHaveValue('en');
   await expect(page.locator('.work-filters button')).toHaveText(['all works', 'artistic', 'commercial']);
@@ -25,7 +44,7 @@ test('requested branding, equal navigation, left categories and pink artwork ove
   await expect(first.locator('.work-overlay')).toHaveCSS('opacity', '0');
   await first.hover();
   await expect(first.locator('.work-overlay')).toHaveCSS('opacity', '1');
-  await expect(first.locator('.work-overlay')).toHaveCSS('background-color', 'rgb(255, 156, 248)');
+  await expect(first.locator('.work-overlay')).toHaveCSS('background-color', 'rgb(51, 151, 255)');
   await expect(first.locator('.work-title')).toHaveText('Slow afternoons');
   await expect(first.locator('.work-category')).toHaveText('artistic');
   const title = await first.locator('.work-title').boundingBox();
@@ -67,6 +86,8 @@ test('Chinese and English translate projects, About and contact and persist on r
   await page.getByRole('combobox', { name: 'Language' }).selectOption('zh');
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
   await expect(page.locator('.navigation a')).toHaveText(['作品', '关于', '联系']);
+  const fonts = await platformFonts(page, '.nav-link');
+  expect(fonts.some(font => ['JinNanJunJunTi', '荆南俊俊体'].includes(font.familyName) && font.isCustomFont)).toBe(true);
   await expect(page.locator('.work-filters button')).toHaveText(['全部作品', '艺术创作', '商业合作']);
   await page.getByRole('button', { name: '商业合作', exact: true }).click();
   await expect(page.locator('.work-item')).toHaveCount(3);
@@ -110,7 +131,7 @@ test('six detail routes, 404 and plain contact information work', async ({ page 
   await expect(page).toHaveURL('/');
 });
 
-test('both languages use only sans-serif typography and fit mobile, tablet and desktop', async ({ page }) => {
+test('both languages inherit the uploaded font and fit mobile, tablet and desktop', async ({ page }) => {
   test.setTimeout(60000);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   for (const width of [360, 390, 768, 1024, 1440]) {
@@ -123,7 +144,7 @@ test('both languages use only sans-serif typography and fit mobile, tablet and d
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
         const invalid = await page.evaluate(() => [...document.querySelectorAll('body *')]
           .filter(el => !el.children.length && el.textContent.trim() && getComputedStyle(el).display !== 'none')
-          .filter(el => !getComputedStyle(el).fontFamily.includes('sans-serif'))
+          .filter(el => !getComputedStyle(el).fontFamily.includes('Trattatello'))
           .map(el => ({ text: el.textContent.slice(0, 30), font: getComputedStyle(el).fontFamily })));
         expect(invalid).toEqual([]);
       }
