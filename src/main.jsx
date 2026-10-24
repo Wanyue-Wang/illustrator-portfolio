@@ -1,6 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, HashRouter, Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
+import '@fontsource/dm-sans/latin-400.css';
+import '@fontsource/dm-sans/latin-500.css';
+import '@fontsource/dm-sans/latin-600.css';
+import '@fontsource/dm-sans/latin-700.css';
 import { artist, projects, assetUrl } from './data';
 import { LanguageProvider, useLanguage } from './i18n';
 import './styles.css';

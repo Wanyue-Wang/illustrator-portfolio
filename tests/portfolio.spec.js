@@ -24,7 +24,7 @@ test('requested branding, equal navigation, top categories and blue artwork over
   await expect.poll(() => page.locator('.signature-image').evaluate(img => img.complete && img.naturalWidth === 2388)).toBe(true);
   await expect(page.locator('.signature-image')).toHaveCSS('filter', 'none');
   const fonts = await platformFonts(page, '.nav-link');
-  expect(fonts.some(font => font.familyName === 'Trattatello' && font.isCustomFont)).toBe(true);
+  expect(fonts.some(font => font.familyName.startsWith('DM Sans') && font.isCustomFont)).toBe(true);
   await expect(page.locator('.navigation a')).toHaveText(['all works', 'artistic', 'commercial', 'about', 'contact']);
   await expect(page.locator('.header-description')).toHaveCount(0);
   await expect(page.locator('.language-select option')).toHaveText(['English', '中文']);
@@ -39,6 +39,14 @@ test('requested branding, equal navigation, top categories and blue artwork over
   const brand = await page.locator('.wordmark').boundingBox();
   const image = await page.locator('.work-image').first().boundingBox();
   expect(Math.abs(image.x - brand.x)).toBeLessThan(1);
+  const frame = await page.locator('.selected-work').boundingBox();
+  expect(frame.width).toBeLessThanOrEqual(1040);
+  expect(frame.x).toBeGreaterThanOrEqual(190);
+  expect(Math.abs(frame.x + frame.width / 2 - 720)).toBeLessThan(1);
+  expect(image.width).toBeLessThan(650);
+  const firstLink = await page.locator('.navigation a').first().boundingBox();
+  expect(firstLink.x - brand.x - brand.width).toBeLessThanOrEqual(40);
+  expect(firstLink.x).toBeGreaterThan(brand.x + brand.width);
   const language = await page.locator('.language-select').boundingBox();
   const lastLink = await page.locator('.navigation a').last().boundingBox();
   expect(language.x).toBeGreaterThan(lastLink.x + lastLink.width);
@@ -93,7 +101,7 @@ test('Chinese and English translate projects, About and contact and persist on r
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
   await expect(page.locator('.navigation a')).toHaveText(['全部作品', '艺术创作', '商业合作', '关于', '联系']);
   const fonts = await platformFonts(page, '.nav-link');
-  expect(fonts.some(font => ['JinNanJunJunTi', '荆南俊俊体'].includes(font.familyName) && font.isCustomFont)).toBe(true);
+  expect(fonts.some(font => /Noto Sans|PingFang|Microsoft YaHei/.test(font.familyName))).toBe(true);
   await expect(page.locator('.work-filters')).toHaveCount(0);
   await page.getByRole('link', { name: '商业合作', exact: true }).click();
   await expect(page.locator('.work-item')).toHaveCount(3);
@@ -141,10 +149,10 @@ test('six detail routes, 404 and plain contact information work', async ({ page 
   await expect(page).toHaveURL('/');
 });
 
-test('both languages inherit the uploaded font and fit mobile, tablet and desktop', async ({ page }) => {
+test('both languages use restored sans-serif fonts and fit mobile, tablet and desktop', async ({ page }) => {
   test.setTimeout(60000);
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  for (const width of [360, 390, 768, 1024, 1440]) {
+  for (const width of [320, 360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     for (const language of ['en', 'zh']) {
       await page.goto('/');
@@ -154,7 +162,7 @@ test('both languages inherit the uploaded font and fit mobile, tablet and deskto
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
         const invalid = await page.evaluate(() => [...document.querySelectorAll('body *')]
           .filter(el => !el.children.length && el.textContent.trim() && getComputedStyle(el).display !== 'none')
-          .filter(el => !getComputedStyle(el).fontFamily.includes('Trattatello'))
+          .filter(el => !getComputedStyle(el).fontFamily.includes('DM Sans'))
           .map(el => ({ text: el.textContent.slice(0, 30), font: getComputedStyle(el).fontFamily })));
         expect(invalid).toEqual([]);
       }
